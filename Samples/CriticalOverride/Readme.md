@@ -1,1 +1,0 @@
-﻿`CritOverride` is a very basic mod that overrides magic/weapon crit chance using hot-reloaded values from `Settings.json`.
