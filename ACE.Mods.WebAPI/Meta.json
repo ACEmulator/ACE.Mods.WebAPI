@@ -1,7 +1,7 @@
 {
-  "Name": "$safeprojectname$",
-  "Author": "",
-  "Description": "This is an example metadata file for a non-existent mod.",
+  "Name": "ACE.Mods.WebAPI",
+  "Author": "ACEmulator",
+  "Description": "API Web Server for ACEmulator",
   "Version": "1.0",
   "Enabled": true,
   "HotReload": true,

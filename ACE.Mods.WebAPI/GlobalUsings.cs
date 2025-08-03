@@ -1,4 +1,4 @@
-﻿global using ACE.Common;
+global using ACE.Common;
 global using ACE.Database;
 global using ACE.Database.Models.Shard;
 global using ACE.Database.Models.World;
@@ -50,8 +50,18 @@ global using BinaryWriter = ACE.Server.Network.GameMessages.RealmsBinaryWriter;
 global using Position = ACE.Server.Realms.InstancedPosition;
 #endif
 
-global using Microsoft.AspNetCore.Builder;
-global using Microsoft.AspNetCore.Http;
-global using Microsoft.Extensions.Configuration;
-global using Microsoft.Extensions.DependencyInjection;
-global using Microsoft.Extensions.Logging;
+global using GenHTTP.Api.Infrastructure;
+//global using GenHTTP.Api.Protocol;
+
+global using GenHTTP.Engine.Internal;
+
+global using GenHTTP.Modules.ApiBrowsing;
+global using GenHTTP.Modules.Controllers;
+//global using GenHTTP.Modules.IO;
+global using GenHTTP.Modules.Layouting;
+global using GenHTTP.Modules.OpenApi;
+global using GenHTTP.Modules.Practices;
+global using GenHTTP.Modules.Webservices;
+
+global using ACE.Mods.WebAPI.Controllers;
+global using ACE.Mods.WebAPI.WebServices;
