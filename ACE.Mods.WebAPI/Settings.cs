@@ -35,12 +35,17 @@ public class Settings
     /// <summary>
     /// Port to Bind to WebAPI
     /// </summary>
-    public ushort Port { get; set; } = 8080;
+    public ushort Port { get; set; } = 9003;
 
     /// <summary>
     /// Base URL to publish with OpenAPI
     /// </summary>
-    public string APIBaseUrl { get; set; } = "http://localhost:8080";
+    public string APIBaseUrl { get; set; } = "http://localhost:9003";
+
+    /// <summary>
+    /// Base URL to publish with OpenAPI
+    /// </summary>
+    public string APIBasePath { get; set; } = "ace-api";
 
     /// <summary>
     /// Enables WebAPI Server raw output to console

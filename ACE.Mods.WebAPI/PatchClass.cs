@@ -34,7 +34,7 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
     protected override void SettingsChanged(object? sender, EventArgs e)
     {
-        Stop();
+        StopServices();
         base.SettingsChanged(sender, e);
         Settings = SettingsContainer?.Settings ?? new();
         StartServices();
@@ -42,16 +42,11 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
     public override void Stop()
     {
+        StopServices();
         base.Stop();
-
-        serverHost?.StopAsync();
-
-        serverHost = null;
-
-        Mod.Log("API Server Offline");
     }
 
-    private void StartServices()
+    public void StartServices()
     {
         try
         {
@@ -65,7 +60,7 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             serverHost = Host.Create();
 
-            var app = Layout.Create();
+            //var app = Layout.Create();
                             //.AddService<BookService>("books")
                             //.AddController<IotController>("device")
                             //.AddOpenApi()
@@ -73,9 +68,12 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                             //.AddRedoc()
                             //.AddScalar();
 
-            app.AddController<StatusController>("status");
-            app.AddService<DerethPulseService>("derethpulse");
+            var api = Layout.Create();
 
+            api.AddController<StatusController>("status");
+            api.AddService<DerethPulseService>("derethpulse");
+            //api.AddController<EventManagerController>("events2");
+            api.AddService<EventManagerService>("events");
 
             var description = ApiDescription.Create()
                                 .Title(Mod.Instance.Container.Meta.Name)
@@ -83,28 +81,30 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                                 .PostProcessor((r, doc) =>
                                 {
                                     doc.Servers.Clear();
-                                    doc.Servers.Add(new NSwag.OpenApiServer() { Url = Settings.APIBaseUrl });
+                                    doc.Servers.Add(new NSwag.OpenApiServer() { Url = Settings.APIBaseUrl + "/" + Settings.APIBasePath });
                                 });
                                 //.PostProcessor((r, doc) => doc.Info.TermsOfService = "https://mycompany.com/tos");
 
             if (Settings.EnableOpenAPI)
-                app.AddOpenApi().Add(description);
+                api.AddOpenApi().Add(description);
 
             if (Settings.EnableSwaggerUI)
-                app.AddSwaggerUI();
+                api.AddSwaggerUI();
 
             if (Settings.EnableRedoc)
-                app.AddRedoc();
+                api.AddRedoc();
 
             if (Settings.EnableScalar)
-                app.AddScalar();
+                api.AddScalar();
 
             var auth = ApiKeyAuthentication.Create()
                                            //.WithQueryParameter("apiKey")
                                            .WithHeader("X-API-Key")
                                            .Authenticator(AuthenticateRequestAsync);
 
-            //app.Add(auth);
+            //api.Add(auth);
+
+            var app = Layout.Create().Add(Settings.APIBasePath, api);
 
             serverHost?.Handler(app);
                        //.Defaults()
@@ -131,6 +131,15 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         {
             Mod.Log($"ERROR during initialization - {ex.Message}", ModManager.LogLevel.Error);
         }
+    }
+
+    public void StopServices()
+    {
+        serverHost?.StopAsync();
+
+        serverHost = null;
+
+        Mod.Log("API Server Offline");
     }
 
     static ValueTask<IUser?> AuthenticateRequestAsync(IRequest request, string apiKey)
