@@ -50,14 +50,18 @@ global using BinaryWriter = ACE.Server.Network.GameMessages.RealmsBinaryWriter;
 global using Position = ACE.Server.Realms.InstancedPosition;
 #endif
 
+global using GenHTTP.Api.Content.Authentication;
 global using GenHTTP.Api.Infrastructure;
-//global using GenHTTP.Api.Protocol;
+global using GenHTTP.Api.Protocol;
+
+global using GenHTTP.Modules.Authentication;
+global using GenHTTP.Modules.Authentication.ApiKey;
 
 global using GenHTTP.Engine.Internal;
 
 global using GenHTTP.Modules.ApiBrowsing;
 global using GenHTTP.Modules.Controllers;
-//global using GenHTTP.Modules.IO;
+global using GenHTTP.Modules.IO;
 global using GenHTTP.Modules.Layouting;
 global using GenHTTP.Modules.OpenApi;
 global using GenHTTP.Modules.Practices;

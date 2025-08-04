@@ -4,6 +4,7 @@ namespace ACE.Mods.WebAPI.WebServices
     {
 
         [ResourceMethod("GetPlayers")]
+        //[RequireRole("ADMIN")]
         public List<PlayerData> GetPlayers()
         {
             var playerData = new List<PlayerData>();

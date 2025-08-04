@@ -77,8 +77,18 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
             app.AddService<DerethPulseService>("derethpulse");
 
 
+            var description = ApiDescription.Create()
+                                .Title(Mod.Instance.Container.Meta.Name)
+                                .Version(Mod.Instance.Container.Meta.Version)
+                                .PostProcessor((r, doc) =>
+                                {
+                                    doc.Servers.Clear();
+                                    doc.Servers.Add(new NSwag.OpenApiServer() { Url = Settings.APIBaseUrl });
+                                });
+                                //.PostProcessor((r, doc) => doc.Info.TermsOfService = "https://mycompany.com/tos");
+
             if (Settings.EnableOpenAPI)
-                app.AddOpenApi();
+                app.AddOpenApi().Add(description);
 
             if (Settings.EnableSwaggerUI)
                 app.AddSwaggerUI();
@@ -88,6 +98,13 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             if (Settings.EnableScalar)
                 app.AddScalar();
+
+            var auth = ApiKeyAuthentication.Create()
+                                           //.WithQueryParameter("apiKey")
+                                           .WithHeader("X-API-Key")
+                                           .Authenticator(AuthenticateRequestAsync);
+
+            //app.Add(auth);
 
             serverHost?.Handler(app);
                        //.Defaults()
@@ -114,6 +131,21 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         {
             Mod.Log($"ERROR during initialization - {ex.Message}", ModManager.LogLevel.Error);
         }
+    }
+
+    static ValueTask<IUser?> AuthenticateRequestAsync(IRequest request, string apiKey)
+    {
+        //if (apiKey == "abc")
+        //{
+        //    return new(new ApiKeyUser(apiKey, "ADMIN", "USER"));
+        //}
+
+        //if (apiKey == "bcd")
+        //{
+        //    return new(new ApiKeyUser(apiKey, "USER"));
+        //}
+
+        return default;
     }
 }
 

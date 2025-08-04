@@ -38,6 +38,11 @@ public class Settings
     public ushort Port { get; set; } = 8080;
 
     /// <summary>
+    /// Base URL to publish with OpenAPI
+    /// </summary>
+    public string APIBaseUrl { get; set; } = "http://localhost:8080";
+
+    /// <summary>
     /// Enables WebAPI Server raw output to console
     /// </summary>
     public bool OutputToConsole { get; set; } = false;
