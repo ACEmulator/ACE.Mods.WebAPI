@@ -2,8 +2,23 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class EventManagerService
     {
-        [ResourceMethod()]
-        public List<Event> Events()
+        //[ResourceMethod()]
+        //public List<Event> Events()
+        //{
+        //    var eventsToReturn = new List<Event>();
+
+        //    var events = EventManager.Events;
+
+        //    foreach (var evnt in events)
+        //    {
+        //        eventsToReturn.Add(evnt.Value);
+        //    }
+
+        //    return eventsToReturn;
+        //}
+
+        [ResourceMethod("")]
+        public List<Event> GetEvents(int? state)
         {
             var eventsToReturn = new List<Event>();
 
@@ -11,6 +26,9 @@ namespace ACE.Mods.WebAPI.WebServices
 
             foreach (var evnt in events)
             {
+                if (state is not null && evnt.Value.State != state)
+                    continue;
+
                 eventsToReturn.Add(evnt.Value);
             }
 
@@ -28,18 +46,18 @@ namespace ACE.Mods.WebAPI.WebServices
             return evnt;
         }
 
-        [ResourceMethod(":eventName/activations")]
-        public Event? GetEvent(string eventName)
-        {
-            var events = EventManager.Events;
+        //[ResourceMethod(":eventName/activation")]
+        //public Event? GetEvent(string eventName)
+        //{
+        //    var events = EventManager.Events;
 
-            if (!events.TryGetValue(eventName, out Event evnt))
-                return null;
+        //    if (!events.TryGetValue(eventName, out Event evnt))
+        //        return null;
 
-            return evnt;
-        }
+        //    return evnt;
+        //}
 
-        [ResourceMethod(RequestMethod.Post, ":eventName/activations")]
+        [ResourceMethod(RequestMethod.Post, ":eventName/activation")]
         public bool Start([FromPath] string eventName)
         {
             var eventStarted = EventManager.StartEvent(eventName, null, null);
@@ -47,7 +65,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return eventStarted;
         }
 
-        [ResourceMethod(RequestMethod.Delete, ":eventName/activations")]
+        [ResourceMethod(RequestMethod.Delete, ":eventName/activation")]
         public bool Stop([FromPath] string eventName)
         {
             var eventStopped = EventManager.StopEvent(eventName, null, null);

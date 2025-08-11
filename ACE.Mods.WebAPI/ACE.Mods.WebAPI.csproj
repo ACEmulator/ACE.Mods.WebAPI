@@ -74,12 +74,12 @@
             <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
             <ExcludeAssets>all</ExcludeAssets>
         </Reference>
-        <!--<Reference Include="Microsoft.EntityFrameworkCore">
+        <Reference Include="Microsoft.EntityFrameworkCore">
 			<HintPath>C:\ACE\Server\Microsoft.EntityFrameworkCore.dll</HintPath>
 			<Private>False</Private>
             <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
             <ExcludeAssets>all</ExcludeAssets>
-		</Reference>-->
+		</Reference>
     </ItemGroup>
 
     <ItemGroup>

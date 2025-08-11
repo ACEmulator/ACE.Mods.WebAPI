@@ -3,8 +3,8 @@ namespace ACE.Mods.WebAPI.WebServices
     public class DerethPulseService
     {
 
-        [ResourceMethod("GetPlayers")]
-        //[RequireRole("ADMIN")]
+        [ResourceMethod("players")]
+        [RequireRole("ADMIN")]
         public List<PlayerData> GetPlayers()
         {
             var playerData = new List<PlayerData>();
@@ -87,7 +87,7 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
-        [ResourceMethod("GetLandblocks")]
+        [ResourceMethod("landblocks")]
         public List<LandblockData> GetLandblocks()
         {
             var landblockData = new List<LandblockData>();
@@ -120,6 +120,8 @@ namespace ACE.Mods.WebAPI.WebServices
                 else if (landblock.IsDormant)
                     status = "Dormant";
 
+                var hasKeepAliveObjects = !landblock.HasNoKeepAliveObjects;
+
                 // Get Landblock X / Y
                 var x = landblock.Id.LandblockX.ToString("x2");
                 var y = landblock.Id.LandblockY.ToString("x2");
@@ -136,6 +138,7 @@ namespace ACE.Mods.WebAPI.WebServices
                 {
                     Id = id,
                     Status = status,
+                    HasKeepAliveObjects = hasKeepAliveObjects,
                     X = x,
                     Y = y,
                     IsDungeon = isDungeon,
@@ -186,6 +189,9 @@ namespace ACE.Mods.WebAPI.WebServices
 
             [JsonPropertyName("Status")]
             public string Status { get; set; } = "";
+
+            [JsonPropertyName("hasKeepAliveObjects")]
+            public bool HasKeepAliveObjects { get; set; } = false;
 
             [JsonPropertyName("x")]
             public string X { get; set; } = "";

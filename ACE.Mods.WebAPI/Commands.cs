@@ -13,5 +13,174 @@ namespace ACE.Mods.WebAPI
         //    Console.WriteLine("Bye.");
         //    //session?.LogOffPlayer(true);
         //}
+
+        [CommandHandler("api", AccessLevel.Admin, CommandHandlerFlag.None, -1, "API management commands")]
+        public static void HandleAPIcommand(Session session, params string[] parameters)
+        {
+            //var apiKey = APIKeys.GenerateSecureApiKey();
+            //Console.WriteLine($"Generated API Key: {apiKey}");
+
+            //APIKeys.Keys.Add(new APIKey() { Name = "test", Key = apiKey, Grants = ["test","test2"] });
+
+            //APIKeys.Keys.Add(apiKey, new APIKey() { Name = "test", Key = apiKey, Grants = ["test","test2"] });
+
+            //APIKeys.Save();
+
+            //APIKeys.Load();
+
+            //Console.WriteLine(APIKeys.Keys);
+            //Console.WriteLine(APIKeys.Keys.First().Key);
+            //Console.WriteLine(APIKeys.Keys.First().Value.Name);
+            //Console.WriteLine(APIKeys.Keys.First().Value.Grants.ToString());
+            if (parameters.Length == 0)
+            {
+                var msg = "@api start: starts the API service.\n";
+                msg += "@api stop: stops the API service.\n";
+                msg += "@api showkeys: lists all active api keys.\n";
+                msg += "@api showkey <name of key>: shows key and grants for specified name.\n";
+                msg += "@api showgrants: shows available grants for keys.\n";
+                msg += "@api generatekey <name for key> <grants>: generates key and saves with specified name and grants.\n";
+                msg += "@api modifykey <name of key>: modifies grants for key specified by name.\n";
+                msg += "@api revokekey <name of key>: deletes key and grants for for specified name.\n";
+
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
+            }
+            else if (parameters[0] == "start")
+            {
+                PatchClass.StartServices();
+            }
+            else if (parameters[0] == "stop")
+            {
+                PatchClass.StopServices();
+            }
+            else if (parameters[0] == "showkeys")
+            {
+                var msg = "\n";
+                if (APIKeys.Keys.Count > 0)
+                {
+                    msg += "API Keys\n";
+                    msg += "=========================================================\n";
+                    foreach (var apiKey in APIKeys.Keys.Values)
+                    {
+                        msg += $"Name: {apiKey.Name}\n";
+                        //msg += $"Key: {apiKey.Key}\n";
+                        msg += $"Grants: {string.Join("; ", apiKey.Grants)}\n";
+                        msg += "=========================================================\n";
+                    }
+                }
+                else
+                {
+                    msg += "There are no active API keys.";
+                }
+
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
+            }
+            else if (parameters[0] == "showkey")
+            {
+                var msg = "\n";
+                if (parameters.Length < 2)
+                {
+                    msg += "You must specify a name for the key to show.";
+                }
+                else
+                {
+                    var nameToFind = string.Join(" ", parameters[1..]);
+
+                    var apiKey = APIKeys.GetKeyByName(nameToFind);
+
+                    if (apiKey == null)
+                    {
+                        msg += $"There is no key named: {nameToFind}";
+                    }
+                    else
+                    {
+                        msg += "=========================================================\n";
+                        msg += $"Name: {apiKey.Name}\n";
+                        msg += $"Key: {apiKey.Key}\n";
+                        msg += $"Grants: {string.Join("; ", apiKey.Grants)}\n";
+                        msg += "=========================================================\n";
+                    }
+                }
+
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
+            }
+            else if (parameters[0] == "showgrants")
+            {
+                var msg = "\n";
+                if (APIKeys.AvailableGrants.Count > 0)
+                {
+
+                    msg += "API Grants\n";
+                    msg += "=========================================================\n";
+                    foreach (var grant in APIKeys.AvailableGrants)
+                    {
+                        msg += $"{grant}\n";
+                    }
+                    msg += "=========================================================\n";
+                }
+                else
+                {
+                    msg += "There are no available grants.";
+                }
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
+            }
+            else if (parameters[0] == "generatekey")
+            {
+            }
+            else if (parameters[0] == "modifykey")
+            {
+            }
+            else if (parameters[0] == "revokekey")
+            {
+            }
+        }
+
+        /// <summary>
+        /// This will determine where a command handler should output to, the console or a client session.<para />
+        /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
+        /// Messages sent to the console will be sent using log.Info()
+        /// </summary>
+        public static void WriteOutputInfo(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        {
+            if (session != null)
+            {
+                if (session.State == Server.Network.Enum.SessionState.WorldConnected && session.Player != null)
+                    ChatPacket.SendServerMessage(session, output, chatMessageType);
+            }
+            else
+                Mod.Log(output, ModManager.LogLevel.Info);
+        }
+
+        /// <summary>
+        /// This will determine where a command handler should output to, the console or a client session.<para />
+        /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
+        /// Messages sent to the console will be sent using log.Debug()
+        /// </summary>
+        public static void WriteOutputDebug(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        {
+            if (session != null)
+            {
+                if (session.State == Server.Network.Enum.SessionState.WorldConnected && session.Player != null)
+                    ChatPacket.SendServerMessage(session, output, chatMessageType);
+            }
+            else
+                Mod.Log(output, ModManager.LogLevel.Debug);
+        }
+
+        /// <summary>
+        /// This will determine where a command handler should output to, the console or a client session.<para />
+        /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
+        /// Messages sent to the console will be sent using log.Debug()
+        /// </summary>
+        public static void WriteOutputError(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        {
+            if (session != null)
+            {
+                if (session.State == Server.Network.Enum.SessionState.WorldConnected && session.Player != null)
+                    ChatPacket.SendServerMessage(session, output, chatMessageType);
+            }
+            else
+                Mod.Log(output, ModManager.LogLevel.Error);
+        }
     }
 }

@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # ACEmulator Mod specific files
 Settings.json
+APIKeys.json

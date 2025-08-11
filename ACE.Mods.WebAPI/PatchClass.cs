@@ -3,13 +3,7 @@ namespace ACE.Mods.WebAPI;
 [HarmonyPatch]
 public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : BasicPatch<Settings>(mod, settingsName)
 {
-    //private static readonly JsonSerializerOptions jsonSerializerOptions = new()
-    //{
-    //    WriteIndented = true,
-    //    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    //};
-
-    private IServerHost? serverHost;
+    private static IServerHost? serverHost;
 
     public override void Init()
     {
@@ -46,7 +40,7 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         base.Stop();
     }
 
-    public void StartServices()
+    public static void StartServices()
     {
         try
         {
@@ -69,11 +63,43 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                             //.AddScalar();
 
             var api = Layout.Create();
+            var secure_api = Layout.Create();
+
+            var auth = ApiKeyAuthentication.Create()
+                                           //.WithQueryParameter("apiKey")
+                                           .WithHeader("X-API-Key")
+                                           .Authenticator(AuthenticateRequestAsync);
+
+            //api.Add(auth);
 
             api.AddController<StatusController>("status");
-            api.AddService<DerethPulseService>("derethpulse");
+
+            //api.AddService<DerethPulseService>("derethpulse");
+            //api.Add("derethpulse", ServiceResource.From<DerethPulseService>().Authentication(auth));
             //api.AddController<EventManagerController>("events2");
-            api.AddService<EventManagerService>("events");
+            secure_api.AddService<DerethPulseService>("derethpulse");
+            APIKeys.AddRolesToAvailableGrants<DerethPulseService>();
+
+            //api.AddService<EventManagerService>("events");
+            //api.Add("events", ServiceResource.From<EventManagerService>().Authentication(auth));
+            secure_api.AddService<EventManagerService>("events");
+            APIKeys.AddRolesToAvailableGrants<EventManagerService>();
+
+            //api.AddService<AccountManagerService>("accounts");
+            //api.AddService<CharacterManagerService>("characters");
+            //api.AddService<PlayerManagerService>("players");
+
+            //api.AddService<AllegianceManagerService>("allegiances");
+
+            secure_api.AddService<AccountManagerService>("accounts");
+            APIKeys.AddRolesToAvailableGrants<AccountManagerService>();
+            secure_api.AddService<CharacterManagerService>("characters");
+            APIKeys.AddRolesToAvailableGrants<CharacterManagerService>();
+            secure_api.AddService<PlayerManagerService>("players");
+            APIKeys.AddRolesToAvailableGrants<PlayerManagerService>();
+
+            secure_api.AddService<AllegianceManagerService>("allegiances");
+            APIKeys.AddRolesToAvailableGrants<AllegianceManagerService>();
 
             var description = ApiDescription.Create()
                                 .Title(Mod.Instance.Container.Meta.Name)
@@ -82,6 +108,38 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                                 {
                                     doc.Servers.Clear();
                                     doc.Servers.Add(new NSwag.OpenApiServer() { Url = Settings.APIBaseUrl + "/" + Settings.APIBasePath });
+                                    doc.SecurityDefinitions.Add("X-API-Key", new NSwag.OpenApiSecurityScheme()
+                                    {
+                                        //Name = "Baz",
+                                        //Description = "Bar",
+                                        //Type = OpenApiSecuritySchemeType.Basic,
+                                        //Flow = OpenApiOAuth2Flow.Application,
+                                        //In = OpenApiSecurityApiKeyLocation.Header,
+                                        //AuthorizationUrl = "AuthUrl",
+                                        Name = "X-API-Key",
+                                        //Description = "Bar",
+                                        Type = OpenApiSecuritySchemeType.ApiKey,
+                                        In = OpenApiSecurityApiKeyLocation.Header,
+                                    });
+                                    //IEnumerable<string> emptyStringList = new List<string> { };
+                                    var emptyStringList = new List<string> { };
+                                    var apiKeySecurityRequirement = new OpenApiSecurityRequirement();
+                                    apiKeySecurityRequirement.Add("X-API-Key", emptyStringList);
+
+                                    foreach (var path in doc.Paths)
+                                    {
+                                        if (path.Key == "/status/")
+                                            continue;
+
+                                        foreach (var pathValue in path.Value.Values)
+                                        {
+                                            var securityRequirementList = new List<OpenApiSecurityRequirement>();
+                                            pathValue.Security ??= securityRequirementList;
+                                            pathValue.Security.Add(apiKeySecurityRequirement);
+
+                                            pathValue.Responses.Add("401", new OpenApiResponse() { Description = "Unauthorized" });
+                                        }
+                                    }
                                 });
                                 //.PostProcessor((r, doc) => doc.Info.TermsOfService = "https://mycompany.com/tos");
 
@@ -97,14 +155,23 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
             if (Settings.EnableScalar)
                 api.AddScalar();
 
-            var auth = ApiKeyAuthentication.Create()
-                                           //.WithQueryParameter("apiKey")
-                                           .WithHeader("X-API-Key")
-                                           .Authenticator(AuthenticateRequestAsync);
+            //var auth = BasicAuthentication.Create()
+            //                              .Add("Bob", "pw123");
+
+            //var auth = ApiKeyAuthentication.Create()
+            //                               //.WithQueryParameter("apiKey")
+            //                               .WithHeader("X-API-Key")
+            //                               .Authenticator(AuthenticateRequestAsync);
 
             //api.Add(auth);
 
+            secure_api.Add(auth);
+
+            api.Add(secure_api);
+
             var app = Layout.Create().Add(Settings.APIBasePath, api);
+
+            //app.Add(auth);
 
             serverHost?.Handler(app);
                        //.Defaults()
@@ -112,9 +179,11 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                        //.Console()
                        //.StartAsync();
 
+            //serverHost?.Add(auth);
+
             serverHost?.Defaults();
 
-            var host = System.Net.IPAddress.Parse(Settings.Host);
+            var host = IPAddress.Parse(Settings.Host);
             var port = Settings.Port;
 
             serverHost?.Bind(host, port);
@@ -126,6 +195,8 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             Mod.Log($"API Server Online and listening to requests at http://{host}:{port}");
 
+            APIKeys.Load();
+            Mod.Log($"API Server has loaded and activated {APIKeys.Keys.Count} keys from storage");
         }
         catch (Exception ex)
         {
@@ -133,17 +204,21 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         }
     }
 
-    public void StopServices()
+    public static void StopServices()
     {
         serverHost?.StopAsync();
 
         serverHost = null;
+
+        APIKeys.Keys.Clear();
 
         Mod.Log("API Server Offline");
     }
 
     static ValueTask<IUser?> AuthenticateRequestAsync(IRequest request, string apiKey)
     {
+        //Console.WriteLine($"request: {request.ToString()}  -- apikey: {apiKey}");
+
         //if (apiKey == "abc")
         //{
         //    return new(new ApiKeyUser(apiKey, "ADMIN", "USER"));
@@ -153,6 +228,21 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         //{
         //    return new(new ApiKeyUser(apiKey, "USER"));
         //}
+
+        //return new(new ApiKeyUser(apiKey, "ADMIN"));
+
+        //return new(new ApiKeyUser(apiKey));
+
+        if (APIKeys.Keys.TryGetValue(apiKey, out var key))
+        {
+            //Console.WriteLine($"apikey: {apiKey} -- name: {key.Name} -- grants: {string.Join("; ", key.Grants)}");
+            //Console.WriteLine($"{key.Grants.Contains("ALL")}");
+
+            if (key.Grants.Contains("ALL"))
+                return new(new ApiKeyUser(apiKey, APIKeys.AvailableGrants.ToArray()));
+
+            return new(new ApiKeyUser(apiKey, key.Grants.ToArray()));
+        }
 
         return default;
     }

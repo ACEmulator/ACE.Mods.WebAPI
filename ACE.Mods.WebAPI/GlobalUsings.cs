@@ -1,5 +1,6 @@
 global using ACE.Common;
 global using ACE.Database;
+global using ACE.Database.Models.Auth;
 global using ACE.Database.Models.Shard;
 global using ACE.Database.Models.World;
 global using ACE.DatLoader.Entity.AnimationHooks;
@@ -26,9 +27,15 @@ global using ACE.Server.WorldObjects;
 
 global using HarmonyLib;
 
+global using Microsoft.EntityFrameworkCore;
+
+global using NSwag;
+
 global using System.Diagnostics;
+global using System.Net;
 global using System.Numerics;
 global using System.Reflection;
+global using System.Security.Cryptography;
 global using System.Text;
 global using System.Text.Encodings.Web;
 global using System.Text.Json;
