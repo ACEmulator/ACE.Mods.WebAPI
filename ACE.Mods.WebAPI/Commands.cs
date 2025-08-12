@@ -14,34 +14,20 @@ namespace ACE.Mods.WebAPI
         //    //session?.LogOffPlayer(true);
         //}
 
-        [CommandHandler("api", AccessLevel.Admin, CommandHandlerFlag.None, -1, "API management commands")]
+        [CommandHandler("api", AccessLevel.Admin, CommandHandlerFlag.None, 0, "API management commands")]
         public static void HandleAPIcommand(Session session, params string[] parameters)
         {
-            //var apiKey = APIKeys.GenerateSecureApiKey();
-            //Console.WriteLine($"Generated API Key: {apiKey}");
-
-            //APIKeys.Keys.Add(new APIKey() { Name = "test", Key = apiKey, Grants = ["test","test2"] });
-
-            //APIKeys.Keys.Add(apiKey, new APIKey() { Name = "test", Key = apiKey, Grants = ["test","test2"] });
-
-            //APIKeys.Save();
-
-            //APIKeys.Load();
-
-            //Console.WriteLine(APIKeys.Keys);
-            //Console.WriteLine(APIKeys.Keys.First().Key);
-            //Console.WriteLine(APIKeys.Keys.First().Value.Name);
-            //Console.WriteLine(APIKeys.Keys.First().Value.Grants.ToString());
-            if (parameters.Length == 0)
+            if (parameters.Length == 0 || (parameters.Length >= 1 && parameters[0] == "help"))
             {
-                var msg = "@api start: starts the API service.\n";
+                var msg = "@api help: shows this message.\n";
+                msg += "@api start: starts the API service.\n";
                 msg += "@api stop: stops the API service.\n";
                 msg += "@api showkeys: lists all active api keys.\n";
                 msg += "@api showkey <name of key>: shows key and grants for specified name.\n";
-                msg += "@api showgrants: shows available grants for keys.\n";
-                msg += "@api generatekey <name for key> <grants>: generates key and saves with specified name and grants.\n";
-                msg += "@api modifykey <name of key>: modifies grants for key specified by name.\n";
-                msg += "@api revokekey <name of key>: deletes key and grants for for specified name.\n";
+                msg += "@api showgrants: lists all available grants for keys.\n";
+                msg += "@api generatekey <name for key>, <grants>: generates key and saves with specified name and grants.\n";
+                msg += "@api modifykey <name of key>, <add | remove> <grants>: modifies grants for key specified by name.\n";
+                msg += "@api revokekey <name of key>: deletes key and grants for specified name.\n";
 
                 WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
             }
@@ -126,12 +112,82 @@ namespace ACE.Mods.WebAPI
             }
             else if (parameters[0] == "generatekey")
             {
+                var msg = "\n";
+                if (parameters.Length < 2)
+                {
+                    msg += "You must specify a name for the key to add.";
+                }
+                else if (parameters.Length >= 2)
+                {
+                    var namesAndGrants = parameters[1..];
+                    var indexOfComma = Array.IndexOf(namesAndGrants, namesAndGrants.FirstOrDefault(c => c.EndsWith(',')));
+
+                    var name = "";
+                    var grants = Array.Empty<string>();
+                    if (indexOfComma > -1)
+                    {
+                        foreach (var item in namesAndGrants[..(indexOfComma + 1)])
+                            name += $"{item.TrimEnd(',')} ";
+                        name = name.TrimEnd();
+                        grants = namesAndGrants[(indexOfComma + 1)..];
+                    }
+                    else
+                    {
+                        foreach (var item in namesAndGrants)
+                            name += $"{item.TrimEnd(',')} ";
+                        name = name.TrimEnd();
+                    }
+
+                    //msg += $"namesAndGrants: {namesAndGrants}\n";
+                    //msg += $"indexOfComma: {indexOfComma}\n";
+                    //msg += $"Name: {name}\n";
+                    //msg += $"Grants: ";
+                    //Array.ForEach(grants, x => msg += $"{x} ");
+                    //msg = msg.TrimEnd();
+
+                    var success = APIKeys.Add(name, grants, out var apiKey);
+
+                    if (success)
+                    {
+                        msg += "=========================================================\n";
+                        msg += $"Name: {apiKey.Name}\n";
+                        msg += $"Key: {apiKey.Key}\n";
+                        msg += $"Grants: {string.Join("; ", apiKey.Grants)}\n";
+                        msg += "=========================================================\n";
+                    }
+                    else
+                    {
+                        msg += "Unable to generate a key.";
+                    }
+                }
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
             }
             else if (parameters[0] == "modifykey")
             {
             }
             else if (parameters[0] == "revokekey")
             {
+                var msg = "\n";
+                if (parameters.Length < 2)
+                {
+                    msg += "You must specify a name for the key to revoke.";
+                }
+                else if (parameters.Length >= 2)
+                {
+                    var name = string.Join(" ", parameters[1..]);
+
+                    var success = APIKeys.Remove(name);
+
+                    if (success)
+                    {
+                        msg += "Key revoked.";
+                    }
+                    else
+                    {
+                        msg += "Unable to revoke that key.";
+                    }
+                }
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
             }
         }
 

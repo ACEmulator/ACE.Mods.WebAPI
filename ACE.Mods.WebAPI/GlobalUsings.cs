@@ -72,6 +72,7 @@ global using GenHTTP.Modules.IO;
 global using GenHTTP.Modules.Layouting;
 global using GenHTTP.Modules.OpenApi;
 global using GenHTTP.Modules.Practices;
+global using GenHTTP.Modules.Security;
 global using GenHTTP.Modules.Webservices;
 
 global using ACE.Mods.WebAPI.Controllers;

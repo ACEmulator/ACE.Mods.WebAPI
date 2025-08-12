@@ -44,7 +44,7 @@ public class APIKeys
     {
         using (FileStream fs = File.Create(filePath))
         {
-            JsonSerializer.Serialize((Stream)fs, jsonSerializerOptions);
+            JsonSerializer.Serialize((Stream)fs, Keys.Values, jsonSerializerOptions);
         }
     }
 
@@ -55,6 +55,37 @@ public class APIKeys
         if (HasKeyName(name))
             return false;
 
+        key.Name = name;
+
+        if (apiKey == "")
+            key.Key = GenerateSecureApiKey();
+        else
+            key.Key = apiKey;
+
+        if (Keys.ContainsKey(key.Key))
+            return false;
+
+        foreach (var grant in grants)
+            key.Grants.Add(grant);
+
+        Keys.Add(key.Key, key);
+
+        Save();
+
+        return true;
+    }
+
+    public static bool Remove(string name)
+    {
+        var apiKey = GetKeyByName(name);
+
+        if (apiKey == null || apiKey.Key == null)
+            return false;
+
+        Keys.Remove(apiKey.Key);
+
+        Save();
+
         return true;
     }
 
@@ -64,7 +95,7 @@ public class APIKeys
 
     public static APIKey? GetKeyByName(string name) => Keys.Values.FirstOrDefault(k => k.Name == name);
 
-    public static HashSet<string> AvailableGrants { get; set; } = new() { "ALL" };
+    public static HashSet<string> AvailableGrants { get; set; } = new(StringComparer.InvariantCultureIgnoreCase) { "ALL" };
 
     public static void AddRolesToAvailableGrants<T>()
     {
@@ -111,5 +142,5 @@ public class APIKey
 {
     public string? Name { get; set; }
     public string? Key { get; set; }
-    public HashSet<string> Grants { get; set; }
+    public HashSet<string> Grants { get; set; } = new();
 }

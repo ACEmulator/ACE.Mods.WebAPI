@@ -173,6 +173,8 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             //app.Add(auth);
 
+            app.Add(CorsPolicy.Permissive());
+
             serverHost?.Handler(app);
                        //.Defaults()
                        //.Development()
@@ -193,7 +195,13 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             var server = serverHost?.StartAsync();
 
-            Mod.Log($"API Server Online and listening to requests at http://{host}:{port}");
+            Mod.Log($"API Server Online and listening to requests at http://{host}:{port}" + $"/{Settings.APIBasePath}");
+            if (Settings.EnableSwaggerUI)
+                Mod.Log($"SwaggerUI API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/swagger/");
+            if (Settings.EnableRedoc)
+                Mod.Log($"Redoc API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/redoc/");
+            if (Settings.EnableScalar)
+                Mod.Log($"Scalar API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/scalar/");
 
             APIKeys.Load();
             Mod.Log($"API Server has loaded and activated {APIKeys.Keys.Count} keys from storage");
@@ -247,4 +255,3 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         return default;
     }
 }
-
