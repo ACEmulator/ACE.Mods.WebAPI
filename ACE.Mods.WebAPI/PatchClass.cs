@@ -93,6 +93,8 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             secure_api.AddService<HouseManagerService>("housing");
             APIKeys.AddRolesToAvailableGrants<HouseManagerService>();
+            secure_api.AddService<SettlementsService>("settlements");
+            APIKeys.AddRolesToAvailableGrants<SettlementsService>();
 
             secure_api.AddService<AccountManagerService>("accounts");
             APIKeys.AddRolesToAvailableGrants<AccountManagerService>();

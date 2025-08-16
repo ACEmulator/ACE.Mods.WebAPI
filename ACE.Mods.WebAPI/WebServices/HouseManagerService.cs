@@ -38,6 +38,15 @@ namespace ACE.Mods.WebAPI.WebServices
                     }
                     else
                     {
+                        if (SettlementsService.SettlementsDB.Count == 0)
+                        {
+                            SettlementsService.LoadSettlementDB();
+                        }
+
+                        if (SettlementsService.SettlementLandblockIdtoName.TryGetValue(houseDatabaseCollection.Location.LandblockId.Landblock, out var settlementName))
+                            houseToReturn.Settlement = settlementName;
+                        else
+                            houseToReturn.Settlement = string.Empty;
                     }
 
                     var houseOwned = HouseManager.GetHouseById(i).FirstOrDefault();
@@ -124,7 +133,7 @@ namespace ACE.Mods.WebAPI.WebServices
             public bool IsOwned { get; set; }
             public bool? IsRentPaid { get; set; }
 
-            public string? Settlement { get; set; }
+            public string Settlement { get; set; } = string.Empty;
         }
     }
 }

@@ -87,6 +87,12 @@
         <Folder Include="wwwroot\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="data\settlementsData.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <!--<ItemGroup>
 		<Content Update="wwwroot\index.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
