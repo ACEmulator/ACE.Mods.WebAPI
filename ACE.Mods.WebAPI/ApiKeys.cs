@@ -31,7 +31,7 @@ public class APIKeys
             // Try loading the keys from file
             using (FileStream fs = File.OpenRead(filePath))
             {
-                Keys = JsonSerializer.Deserialize<List<APIKey>>(fs, jsonSerializerOptions)?.ToDictionary(k => k.Key) ?? new();                
+                Keys = JsonSerializer.Deserialize<List<APIKey>>(fs, jsonSerializerOptions)?.ToDictionary(k => k.Key ?? "") ?? new();
             }
             foreach (var key in Keys.Keys)
             {
@@ -142,5 +142,5 @@ public class APIKey
 {
     public string? Name { get; set; }
     public string? Key { get; set; }
-    public HashSet<string> Grants { get; set; } = new();
+    public HashSet<string> Grants { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
 }

@@ -120,16 +120,32 @@ namespace ACE.Mods.WebAPI
                 else if (parameters.Length >= 2)
                 {
                     var namesAndGrants = parameters[1..];
-                    var indexOfComma = Array.IndexOf(namesAndGrants, namesAndGrants.FirstOrDefault(c => c.EndsWith(',')));
+                    //var indexOfComma = Array.IndexOf(namesAndGrants, namesAndGrants.FirstOrDefault(c => c.EndsWith(',')));
+                    var indexOfParamWithComma = Array.IndexOf(namesAndGrants, namesAndGrants.FirstOrDefault(c => c.Contains(',')));
 
                     var name = "";
                     var grants = Array.Empty<string>();
-                    if (indexOfComma > -1)
+                    if (indexOfParamWithComma > -1)
                     {
-                        foreach (var item in namesAndGrants[..(indexOfComma + 1)])
+                        foreach (var item in namesAndGrants[..(indexOfParamWithComma + 1)])
                             name += $"{item.TrimEnd(',')} ";
                         name = name.TrimEnd();
-                        grants = namesAndGrants[(indexOfComma + 1)..];
+
+                        //msg += $"nameBeforeSplit: {name}\n";
+
+                        if (name.Contains(','))
+                        {
+                            var nameSplit = name.Split(',');
+
+                            //msg += $"nameSplit: ";
+                            //Array.ForEach(nameSplit, x => msg += $"{x} ");
+                            //msg += $"\n";
+
+                            name = nameSplit[0].TrimEnd();
+                            grants = grants.AddRangeToArray(nameSplit[1..]);
+                        }
+
+                        grants = grants.AddRangeToArray(namesAndGrants[(indexOfParamWithComma + 1)..]);
                     }
                     else
                     {
@@ -138,12 +154,15 @@ namespace ACE.Mods.WebAPI
                         name = name.TrimEnd();
                     }
 
-                    //msg += $"namesAndGrants: {namesAndGrants}\n";
-                    //msg += $"indexOfComma: {indexOfComma}\n";
+                    //msg += $"namesAndGrants: ";
+                    //Array.ForEach(namesAndGrants, x => msg += $"{x} ");
+                    //msg += $"\n";
+                    //msg += $"indexOfComma: {indexOfParamWithComma}\n";
                     //msg += $"Name: {name}\n";
                     //msg += $"Grants: ";
                     //Array.ForEach(grants, x => msg += $"{x} ");
                     //msg = msg.TrimEnd();
+                    //msg += $"\n";
 
                     var success = APIKeys.Add(name, grants, out var apiKey);
 

@@ -2,6 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class CharacterManagerService
     {
+        //[RequireRole("characters")]
         //[ResourceMethod("")]
         //public List<CharacterStubDTO> GetCharactersList()
         //{
@@ -19,6 +20,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    }
         //}
 
+        [RequireRole("characters")]
         [ResourceMethod("")]
         public List<CharacterStubDTO> GetCharacters(uint? accountId)
         {
@@ -51,6 +53,7 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
+        [RequireRole("characters")]
         [ResourceMethod(":characterId")]
         public CharacterDTO? GetCharacter(uint characterId)
         {
@@ -118,7 +121,7 @@ namespace ACE.Mods.WebAPI.WebServices
         public class CharacterStubDTO
         {
             public uint Id { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
             public bool IsDeleted { get; set; }
         }
 
@@ -126,7 +129,7 @@ namespace ACE.Mods.WebAPI.WebServices
         {
             public uint Id { get; set; }
             public uint AccountId { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
             public bool IsPlussed { get; set; }
             public bool IsDeleted { get; set; }
             public ulong? DeleteTime { get; set; }
@@ -134,7 +137,7 @@ namespace ACE.Mods.WebAPI.WebServices
             public int TotalLogins { get; set; }
             public int CharacterOptions1 { get; set; }
             public int CharacterOptions2 { get; set; }
-            public byte[] GameplayOptions { get; set; }
+            public byte[]? GameplayOptions { get; set; }
             public uint SpellbookFilters { get; set; }
             public uint HairTexture { get; set; }
             public uint DefaultHairTexture { get; set; }

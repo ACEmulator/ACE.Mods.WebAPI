@@ -2,6 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class EventManagerService
     {
+        //[RequireRole("events")]
         //[ResourceMethod()]
         //public List<Event> Events()
         //{
@@ -17,6 +18,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    return eventsToReturn;
         //}
 
+        [RequireRole("events")]
         [ResourceMethod("")]
         public List<Event> GetEvents(int? state)
         {
@@ -40,7 +42,7 @@ namespace ACE.Mods.WebAPI.WebServices
         {
             var events = EventManager.Events;
 
-            if (!events.TryGetValue(eventName, out Event evnt))
+            if (!events.TryGetValue(eventName, out Event? evnt))
                 return null;
 
             return evnt;

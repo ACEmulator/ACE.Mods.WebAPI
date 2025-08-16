@@ -20,7 +20,7 @@ namespace ACE.Mods.WebAPI.Controllers
         {
             var events = EventManager.Events;
 
-            if (!events.TryGetValue(eventName, out Event evnt))
+            if (!events.TryGetValue(eventName, out Event? evnt))
                 return null;
 
             return evnt;

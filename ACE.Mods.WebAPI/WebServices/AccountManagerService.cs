@@ -2,6 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class AccountManagerService
     {
+        [RequireRole("accounts")]
         [ResourceMethod("")]
         public List<AccountStubDTO> GetAccounts()
         {
@@ -19,6 +20,7 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
+        [RequireRole("accounts")]
         [ResourceMethod(":accountName")]
         public AccountDTO? GetAccount(string accountName)
         {
@@ -30,6 +32,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return PackAccount(account);
         }
 
+        //[RequireRole("accounts")]
         //[ResourceMethod(":accountId")]
         //public AccountDTO? GetAccount(uint accountId)
         //{
@@ -41,6 +44,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    return PackAccount(account);
         //}
 
+        [RequireRole("accounts")]
         [ResourceMethod(":accountName/characters")]
         public List<CharacterManagerService.CharacterStubDTO>? GetCharacters(string accountName)
         {
@@ -52,6 +56,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return CharacterManagerService.GetCharactersList(account.AccountId);
         }
 
+        [RequireRole("accounts")]
         [ResourceMethod(":accountName/characters/:characterId")]
         public CharacterManagerService.CharacterDTO? GetCharacter(string accountName, uint characterId)
         {
@@ -94,13 +99,13 @@ namespace ACE.Mods.WebAPI.WebServices
         public class AccountStubDTO
         {
             public uint Id { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
         }
 
         public class AccountDTO
         {
             public uint Id { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
             public uint AccessLevel { get; set; }
             public string? EmailAddress { get; set; }
             public DateTime? CreationTime { get; set; }

@@ -2,6 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class AllegianceManagerService
     {
+        [RequireRole("allegiances")]
         [ResourceMethod("")]
         public List<AllegianceDTO> GetAllegiances()
         {
@@ -28,10 +29,10 @@ namespace ACE.Mods.WebAPI.WebServices
         public class AllegianceDTO
         {
             public uint Guid { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
 
             public uint MonarchGuid { get; set; }
-            public string MonarchName { get; set; }
+            public string? MonarchName { get; set; }
         }
     }
 }
