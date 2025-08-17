@@ -157,17 +157,33 @@ namespace ACE.Mods.WebAPI
                     //msg += $"namesAndGrants: ";
                     //Array.ForEach(namesAndGrants, x => msg += $"{x} ");
                     //msg += $"\n";
-                    //msg += $"indexOfComma: {indexOfParamWithComma}\n";
+                    //msg += $"indexOfParamWithComma: {indexOfParamWithComma}\n";
                     //msg += $"Name: {name}\n";
                     //msg += $"Grants: ";
                     //Array.ForEach(grants, x => msg += $"{x} ");
                     //msg = msg.TrimEnd();
                     //msg += $"\n";
 
-                    var success = APIKeys.Add(name, grants, out var apiKey);
+                    var validGrants = Array.Empty<string>();
+                    var invalidGrants = Array.Empty<string>();
+
+                    foreach (var grant in grants)
+                    {
+                        if (APIKeys.AvailableGrants.Contains(grant))
+                            validGrants = validGrants.AddItem(grant).ToArray();
+                        else
+                            invalidGrants = invalidGrants.AddItem(grant).ToArray();
+                    }
+
+                    if (invalidGrants.Length > 0)
+                        msg += $"The following grants are not valid and were ignored: {string.Join("; ", invalidGrants)}\n";
+
+                    var success = APIKeys.Add(name, validGrants, out var apiKey);
 
                     if (success)
                     {
+                        PlayerManager.BroadcastToAuditChannel(session?.Player, $"{(session?.Player != null ? $"{session?.Player?.Name}" : "CONSOLE")} generated an API Key named '{name}'");
+
                         msg += "=========================================================\n";
                         msg += $"Name: {apiKey.Name}\n";
                         msg += $"Key: {apiKey.Key}\n";
@@ -183,6 +199,149 @@ namespace ACE.Mods.WebAPI
             }
             else if (parameters[0] == "modifykey")
             {
+                var msg = "\n";
+                if (parameters.Length < 2)
+                {
+                    msg += "You must specify a name for the key to modify.";
+                }
+                else if (parameters.Length >= 2)
+                {
+                    var namesAndGrants = parameters[1..];
+                    var indexOfParamWithComma = Array.IndexOf(namesAndGrants, namesAndGrants.FirstOrDefault(c => c.Contains(',')));
+                    var name = "";
+                    var grants = Array.Empty<string>();
+                    var actionAndGrants = Array.Empty<string>();
+                    if (indexOfParamWithComma > -1)
+                    {
+                        foreach (var item in namesAndGrants[..(indexOfParamWithComma + 1)])
+                            name += $"{item.TrimEnd(',')} ";
+                        name = name.TrimEnd();
+
+                        //msg += $"nameBeforeSplit: {name}\n";
+
+                        if (name.Contains(','))
+                        {
+                            var nameSplit = name.Split(',');
+
+                            //msg += $"nameSplit: ";
+                            //Array.ForEach(nameSplit, x => msg += $"{x} ");
+                            //msg += $"\n";
+
+                            name = nameSplit[0].TrimEnd();
+                            //grants = grants.AddRangeToArray(nameSplit[1..]);
+                            actionAndGrants = actionAndGrants.AddRangeToArray(nameSplit[1..]);
+                        }
+
+                        actionAndGrants = actionAndGrants.AddRangeToArray(namesAndGrants[(indexOfParamWithComma + 1)..]);
+
+                        var action = "";
+                        if (actionAndGrants.Length > 0)
+                        {
+                            if (actionAndGrants.Length >= 2)
+                            {
+                                if (actionAndGrants[0].Equals("add", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    action = "add";
+                                }
+                                else if (actionAndGrants[0].Equals("remove", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    action = "remove";
+                                }
+                                grants = grants.AddRangeToArray(actionAndGrants[1..]);
+                            }
+                            else
+                            {
+                                msg += $"You must specify at least one grant to add to or remove from the key.";
+                            }
+                        }
+                        else
+                        {
+                            msg += "You must specify an action to perform on the key.";
+                        }
+
+                        //msg += $"\n";
+                        //msg += $"namesAndGrants: ";
+                        //Array.ForEach(namesAndGrants, x => msg += $"{x} ");
+                        //msg += $"\n";
+                        //msg += $"indexOfParamWithComma: {indexOfParamWithComma}\n";
+                        //msg += $"actionAndGrants: ";
+                        //Array.ForEach(actionAndGrants, x => msg += $"{x} ");
+                        //msg = msg.TrimEnd();
+                        //msg += $"\n";
+                        //msg += $"action: {action}\n";
+                        //msg += $"Name: {name}\n";
+                        //msg += $"Grants: ";
+                        //Array.ForEach(grants, x => msg += $"{x} ");
+                        //msg = msg.TrimEnd();
+                        //msg += $"\n";
+
+                        var foundKey = APIKeys.GetKeyByName(name);
+
+                        if (foundKey != null)
+                        {
+                            var validGrants = Array.Empty<string>();
+                            var invalidGrants = Array.Empty<string>();
+
+                            if (action == "add")
+                            {
+                                foreach (var grant in grants)
+                                {
+                                    if (APIKeys.AvailableGrants.Contains(grant) && foundKey.Grants.Add(grant))
+                                        validGrants = validGrants.AddItem(grant).ToArray();
+                                    else
+                                        invalidGrants = invalidGrants.AddItem(grant).ToArray();
+                                }
+                            }
+                            else if (action == "remove")
+                            {
+                                foreach (var grant in grants)
+                                {
+                                    if (foundKey.Grants.Remove(grant))
+                                        validGrants = validGrants.AddItem(grant).ToArray();
+                                    else
+                                        invalidGrants = invalidGrants.AddItem(grant).ToArray();
+                                }
+                            }
+                            else
+                            {
+                                msg += $"Unable to modify the key for {name} because the requested action was neither an add nor remove.";
+                            }
+
+                            if (invalidGrants.Length > 0)
+                                msg += $"The following grants were not {action}ed and were ignored because {(action == "add" ? "they were not valid or already exist" : "they were not found")}: {string.Join("; ", invalidGrants)}\n";
+
+                            if (validGrants.Length > 0)
+                            {
+                                var success = APIKeys.Modify(foundKey);
+
+                                if (success)
+                                {
+                                    PlayerManager.BroadcastToAuditChannel(session?.Player, $"{(session?.Player != null ? $"{session?.Player?.Name}" : "CONSOLE")} modified an API Key named '{name}'");
+
+                                    msg += "Key successfully modified.\n";
+                                    msg += "=========================================================\n";
+                                    msg += $"Name: {foundKey.Name}\n";
+                                    //msg += $"Key: {apiKey.Key}\n";
+                                    msg += $"Grants: {string.Join("; ", foundKey.Grants)}\n";
+                                    msg += "=========================================================\n";
+                                }
+                                else
+                                {
+                                    msg += "Unable to modify key.";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            msg += $"Unable to modify that key because there is no key named: {name}.";
+                        }
+                    }
+                    else
+                    {
+                        msg += "You must specify a name for the key to modify.";
+                    }
+                }
+                WriteOutputInfo(session, msg, ChatMessageType.WorldBroadcast);
             }
             else if (parameters[0] == "revokekey")
             {
@@ -199,6 +358,7 @@ namespace ACE.Mods.WebAPI
 
                     if (success)
                     {
+                        PlayerManager.BroadcastToAuditChannel(session?.Player, $"{(session?.Player != null ? $"{session?.Player?.Name}" : "CONSOLE")} revoked an API Key named '{name}'");
                         msg += "Key revoked.";
                     }
                     else
@@ -215,7 +375,7 @@ namespace ACE.Mods.WebAPI
         /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
         /// Messages sent to the console will be sent using log.Info()
         /// </summary>
-        public static void WriteOutputInfo(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        public static void WriteOutputInfo(Session? session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
         {
             if (session != null)
             {
@@ -231,7 +391,7 @@ namespace ACE.Mods.WebAPI
         /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
         /// Messages sent to the console will be sent using log.Debug()
         /// </summary>
-        public static void WriteOutputDebug(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        public static void WriteOutputDebug(Session? session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
         {
             if (session != null)
             {
@@ -247,7 +407,7 @@ namespace ACE.Mods.WebAPI
         /// If the session is null, the output will be sent to the console. If the session is not null, and the session.Player is in the world, it will be sent to the session.<para />
         /// Messages sent to the console will be sent using log.Debug()
         /// </summary>
-        public static void WriteOutputError(Session session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
+        public static void WriteOutputError(Session? session, string output, ChatMessageType chatMessageType = ChatMessageType.Broadcast)
         {
             if (session != null)
             {

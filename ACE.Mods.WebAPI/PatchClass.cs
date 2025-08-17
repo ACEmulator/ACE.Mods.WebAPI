@@ -26,13 +26,13 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
     //    return Task.CompletedTask;
     //}
 
-    protected override void SettingsChanged(object? sender, EventArgs e)
-    {
-        StopServices();
-        base.SettingsChanged(sender, e);
-        Settings = SettingsContainer?.Settings ?? new();
-        StartServices();
-    }
+    //protected override void SettingsChanged(object? sender, EventArgs e)
+    //{
+    //    StopServices();
+    //    base.SettingsChanged(sender, e);
+    //    Settings = SettingsContainer?.Settings ?? new();
+    //    StartServices();
+    //}
 
     public override void Stop()
     {

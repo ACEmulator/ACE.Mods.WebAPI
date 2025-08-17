@@ -89,6 +89,21 @@ public class APIKeys
         return true;
     }
 
+    public static bool Modify(APIKey key)
+    {
+        if (key?.Name == null || key?.Key == null)
+            return false;
+
+        var apiKey = Keys[key.Key] = key;
+
+        if (apiKey == null || apiKey.Key == null)
+            return false;
+
+        Save();
+
+        return true;
+    }
+
     public static bool HasKey(string apiKey) => Keys.ContainsKey(apiKey);
 
     public static bool HasKeyName(string name) => Keys.Values.Any(k => k.Name == name);
