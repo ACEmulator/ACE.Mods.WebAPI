@@ -37,6 +37,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return eventsToReturn;
         }
 
+        [RequireRole("events")]
         [ResourceMethod(":eventName")]
         public Event? Events(string eventName)
         {
@@ -48,6 +49,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return evnt;
         }
 
+        //[RequireRole("events")]
         //[ResourceMethod(":eventName/activation")]
         //public Event? GetEvent(string eventName)
         //{
@@ -59,6 +61,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    return evnt;
         //}
 
+        [RequireRole("events")]
         [ResourceMethod(RequestMethod.Post, ":eventName/activation")]
         public bool Start([FromPath] string eventName)
         {
@@ -67,6 +70,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return eventStarted;
         }
 
+        [RequireRole("events")]
         [ResourceMethod(RequestMethod.Delete, ":eventName/activation")]
         public bool Stop([FromPath] string eventName)
         {
