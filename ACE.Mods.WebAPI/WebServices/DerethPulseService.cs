@@ -3,7 +3,7 @@ namespace ACE.Mods.WebAPI.WebServices
     public class DerethPulseService
     {
 
-        [RequireRole("derethpulse")]
+        [RequireGrant("derethpulse")]
         [ResourceMethod("players")]
         public List<PlayerData> GetPlayers()
         {
@@ -87,7 +87,7 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
-        [RequireRole("derethpulse")]
+        [RequireGrant("derethpulse")]
         [ResourceMethod("landblocks")]
         public List<LandblockData> GetLandblocks()
         {

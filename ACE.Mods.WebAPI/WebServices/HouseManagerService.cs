@@ -2,8 +2,8 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class HouseManagerService
     {
-        [RequireRole("housing")]
-        [ResourceMethod("")]
+        [RequireGrant("housing")]
+        [ResourceMethod("houses")]
         public List<HouseStubDTO> GetHousing(int? houseType, bool includeApartments = false)
         {
             var housesToReturn = new List<HouseStubDTO>();
@@ -38,12 +38,12 @@ namespace ACE.Mods.WebAPI.WebServices
                     }
                     else
                     {
-                        if (SettlementsService.SettlementsDB.Count == 0)
+                        if (SettlementsDB.Count == 0)
                         {
-                            SettlementsService.LoadSettlementDB();
+                            LoadSettlementDB();
                         }
 
-                        if (SettlementsService.SettlementLandblockIdtoName.TryGetValue(houseDatabaseCollection.Location.LandblockId.Landblock, out var settlementName))
+                        if (SettlementLandblockIdtoName.TryGetValue(houseDatabaseCollection.Location.LandblockId.Landblock, out var settlementName))
                             houseToReturn.Settlement = settlementName;
                         else
                             houseToReturn.Settlement = string.Empty;
@@ -108,6 +108,94 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
+        [RequireGrant("housing")]
+        [ResourceMethod("settlements")]
+        public List<SettlementInfo> GetSettlements()
+        {
+            if (SettlementsDB.Count == 0)
+            {
+                LoadSettlementDB();
+            }
+
+            return SettlementsDB.Values.ToList();
+        }
+
+        //public static Dictionary<string, SettlementInfo> SettlementsDB = new();
+        public static Dictionary<int, SettlementInfo> SettlementsDB = new();
+        public static Dictionary<uint, string> SettlementLandblockIdtoName = new();
+        //public static Dictionary<uint, int> SettlementLandblockIdtoSettlementId = new();
+
+        private static readonly string settlementDatafileName = "settlementsData.json";
+        private static readonly string settlementDatafilePath = Mod.Instance.ModPath + "/data/" + settlementDatafileName;
+        private static readonly JsonSerializerOptions jsonSerializerOptions = new()
+        {
+            WriteIndented = true,
+        };
+
+        public static void LoadSettlementDB()
+        {
+            if (File.Exists(settlementDatafilePath))
+            {
+                var settlements = new List<SettlementInfo>();
+                using (FileStream fs = File.OpenRead(settlementDatafilePath))
+                {
+                    //SettlementsDB = JsonSerializer.Deserialize<List<SettlementInfo>>(fs, jsonSerializerOptions)?.ToDictionary(k => k.Name ?? "") ?? new();
+                    settlements = JsonSerializer.Deserialize<List<SettlementInfo>>(fs, jsonSerializerOptions) ?? new();
+                }
+                var i = 1;
+                foreach (var settlement in settlements)
+                {
+                    settlement.Id = i++;
+                    
+                    SettlementsDB.TryAdd(settlement.Id, settlement);
+
+                    if (settlement.LandblockIds != null)
+                    {
+                        foreach (var landblock in settlement.LandblockIds)
+                        {
+                            if (!SettlementLandblockIdtoName.TryAdd(landblock, settlement.Name))
+                                Console.WriteLine($"duplicate settlement landblock id: 0x{landblock:X4} | name: {settlement.Name}");
+                        }
+                    }
+                }
+            }
+            //Debugger.Break();
+        }
+
+        public class SettlementInfo
+        {
+            public int Id { get; set; }
+
+            [JsonPropertyName("name")]
+            public string Name { get; set; } = "";
+
+            [JsonPropertyName("hubObjCellId")]
+            public uint? PortalHubArea { get; set; }
+
+            [JsonPropertyName("portalWcid")]
+            public uint? DirectPortalWeenieClassId { get; set; }
+
+            [JsonPropertyName("childLandblocks")]
+            public HashSet<uint>? LandblockIds { get; set; }
+
+            [JsonPropertyName("children")]
+            public HashSet<uint>? HouseWeenieClassIds { get; set; }
+
+            [JsonPropertyName("signWcid")]
+            public uint? SignWeenieClassId { get; set; }
+        }
+
+        public class SettlementStub
+        {
+            public int Id { get; set; }
+
+            [JsonPropertyName("name")]
+            public string Name { get; set; } = "";
+
+            [JsonPropertyName("childLandblocks")]
+            public HashSet<uint>? LandblockIds { get; set; }
+        }
+
         public class HouseDatabaseCollection
         {
             public uint HouseId { get; set; }
@@ -133,6 +221,7 @@ namespace ACE.Mods.WebAPI.WebServices
             public bool IsOwned { get; set; }
             public bool? IsRentPaid { get; set; }
 
+            //public int SettlementId { get; set; }
             public string Settlement { get; set; } = string.Empty;
         }
     }

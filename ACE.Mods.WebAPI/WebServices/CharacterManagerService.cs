@@ -2,7 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class CharacterManagerService
     {
-        //[RequireRole("characters")]
+        //[RequireGrant("characters")]
         //[ResourceMethod("")]
         //public List<CharacterStubDTO> GetCharactersList()
         //{
@@ -20,7 +20,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    }
         //}
 
-        [RequireRole("characters")]
+        [RequireGrant("characters")]
         [ResourceMethod("")]
         public List<CharacterStubDTO> GetCharacters(uint? accountId)
         {
@@ -53,7 +53,7 @@ namespace ACE.Mods.WebAPI.WebServices
             }
         }
 
-        [RequireRole("characters")]
+        [RequireGrant("characters")]
         [ResourceMethod(":characterId")]
         public CharacterDTO? GetCharacter(uint characterId)
         {

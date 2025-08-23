@@ -2,7 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class EventManagerService
     {
-        //[RequireRole("events")]
+        //[RequireGrant("events")]
         //[ResourceMethod()]
         //public List<Event> Events()
         //{
@@ -18,7 +18,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    return eventsToReturn;
         //}
 
-        [RequireRole("events")]
+        [RequireGrant("events")]
         [ResourceMethod("")]
         public List<Event> GetEvents(int? state)
         {
@@ -37,7 +37,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return eventsToReturn;
         }
 
-        [RequireRole("events")]
+        [RequireGrant("events")]
         [ResourceMethod(":eventName")]
         public Event? Events(string eventName)
         {
@@ -61,7 +61,7 @@ namespace ACE.Mods.WebAPI.WebServices
         //    return evnt;
         //}
 
-        [RequireRole("events")]
+        [RequireGrant("events")]
         [ResourceMethod(RequestMethod.Post, ":eventName/activation")]
         public bool Start([FromPath] string eventName)
         {
@@ -70,7 +70,7 @@ namespace ACE.Mods.WebAPI.WebServices
             return eventStarted;
         }
 
-        [RequireRole("events")]
+        [RequireGrant("events")]
         [ResourceMethod(RequestMethod.Delete, ":eventName/activation")]
         public bool Stop([FromPath] string eventName)
         {

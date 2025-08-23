@@ -2,7 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class PlayerManagerService
     {
-        [RequireRole("players")]
+        [RequireGrant("players")]
         [ResourceMethod("")]
         public List<PlayerDTO> GetPlayers()
         {

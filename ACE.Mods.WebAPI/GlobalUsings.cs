@@ -76,5 +76,6 @@ global using GenHTTP.Modules.Reflection;
 global using GenHTTP.Modules.Security;
 global using GenHTTP.Modules.Webservices;
 
+global using ACE.Mods.WebAPI.Authentication;
 global using ACE.Mods.WebAPI.Controllers;
 global using ACE.Mods.WebAPI.WebServices;

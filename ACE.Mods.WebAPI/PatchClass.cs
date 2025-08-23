@@ -46,65 +46,31 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
         {
             //var content = Content.From(Resource.FromString("Hello World!"));
 
-            //var server = Host.Create()
-            //                 .Handler(content)
-            //                 .Defaults()
-            //                 .StartAsync(); // or .RunAsync() to block until the application is shut down
-            //                 //.RunAsync();
-
             serverHost = Host.Create();
-
-            //var app = Layout.Create();
-                            //.AddService<BookService>("books")
-                            //.AddController<IotController>("device")
-                            //.AddOpenApi()
-                            //.AddSwaggerUI()
-                            //.AddRedoc()
-                            //.AddScalar();
 
             var api = Layout.Create();
             var secure_api = Layout.Create();
 
-            var auth = ApiKeyAuthentication.Create()
-                                           //.WithQueryParameter("apiKey")
-                                           .WithHeader("X-API-Key")
-                                           .Authenticator(AuthenticateRequestAsync);
-
-            //api.Add(auth);
-
             api.AddController<StatusController>("status");
 
-            //api.AddService<DerethPulseService>("derethpulse");
-            //api.Add("derethpulse", ServiceResource.From<DerethPulseService>().Authentication(auth));
-            //api.AddController<EventManagerController>("events2");
             secure_api.AddService<DerethPulseService>("derethpulse");
-            APIKeys.AddRolesToAvailableGrants<DerethPulseService>();
+            AuthDB.AddGrantsToAvailableGrants<DerethPulseService>();
 
-            //api.AddService<EventManagerService>("events");
-            //api.Add("events", ServiceResource.From<EventManagerService>().Authentication(auth));
             secure_api.AddService<EventManagerService>("events");
-            APIKeys.AddRolesToAvailableGrants<EventManagerService>();
-
-            //api.AddService<AccountManagerService>("accounts");
-            //api.AddService<CharacterManagerService>("characters");
-            //api.AddService<PlayerManagerService>("players");
-
-            //api.AddService<AllegianceManagerService>("allegiances");
+            AuthDB.AddGrantsToAvailableGrants<EventManagerService>();
 
             secure_api.AddService<HouseManagerService>("housing");
-            APIKeys.AddRolesToAvailableGrants<HouseManagerService>();
-            secure_api.AddService<SettlementsService>("settlements");
-            APIKeys.AddRolesToAvailableGrants<SettlementsService>();
+            AuthDB.AddGrantsToAvailableGrants<HouseManagerService>();
 
             secure_api.AddService<AccountManagerService>("accounts");
-            APIKeys.AddRolesToAvailableGrants<AccountManagerService>();
+            AuthDB.AddGrantsToAvailableGrants<AccountManagerService>();
             secure_api.AddService<CharacterManagerService>("characters");
-            APIKeys.AddRolesToAvailableGrants<CharacterManagerService>();
+            AuthDB.AddGrantsToAvailableGrants<CharacterManagerService>();
             secure_api.AddService<PlayerManagerService>("players");
-            APIKeys.AddRolesToAvailableGrants<PlayerManagerService>();
+            AuthDB.AddGrantsToAvailableGrants<PlayerManagerService>();
 
             secure_api.AddService<AllegianceManagerService>("allegiances");
-            APIKeys.AddRolesToAvailableGrants<AllegianceManagerService>();
+            AuthDB.AddGrantsToAvailableGrants<AllegianceManagerService>();
 
             var description = ApiDescription.Create()
                                 .Title(Mod.Instance.Container.Meta.Name)
@@ -115,18 +81,11 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                                     doc.Servers.Add(new NSwag.OpenApiServer() { Url = Settings.APIBaseUrl + "/" + Settings.APIBasePath });
                                     doc.SecurityDefinitions.Add("X-API-Key", new NSwag.OpenApiSecurityScheme()
                                     {
-                                        //Name = "Baz",
-                                        //Description = "Bar",
-                                        //Type = OpenApiSecuritySchemeType.Basic,
-                                        //Flow = OpenApiOAuth2Flow.Application,
-                                        //In = OpenApiSecurityApiKeyLocation.Header,
-                                        //AuthorizationUrl = "AuthUrl",
                                         Name = "X-API-Key",
-                                        //Description = "Bar",
+                                        //Description = "X-API-Key",
                                         Type = OpenApiSecuritySchemeType.ApiKey,
                                         In = OpenApiSecurityApiKeyLocation.Header,
                                     });
-                                    //IEnumerable<string> emptyStringList = new List<string> { };
                                     var emptyStringList = new List<string> { };
                                     var apiKeySecurityRequirement = new OpenApiSecurityRequirement();
                                     apiKeySecurityRequirement.Add("X-API-Key", emptyStringList);
@@ -143,6 +102,7 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                                             pathValue.Security.Add(apiKeySecurityRequirement);
 
                                             pathValue.Responses.Add("401", new OpenApiResponse() { Description = "Unauthorized" });
+                                            pathValue.Responses.Add("403", new OpenApiResponse() { Description = "Forbidden" });
                                         }
                                     }
                                 });
@@ -163,20 +123,16 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
             //var auth = BasicAuthentication.Create()
             //                              .Add("Bob", "pw123");
 
-            //var auth = ApiKeyAuthentication.Create()
-            //                               //.WithQueryParameter("apiKey")
-            //                               .WithHeader("X-API-Key")
-            //                               .Authenticator(AuthenticateRequestAsync);
-
-            //api.Add(auth);
+            var auth = ApiKeyAuthentication.Create()
+                                           //.WithQueryParameter("apiKey")
+                                           .WithHeader("X-API-Key")
+                                           .Authenticator(AuthDB.AuthenticateRequestAsync);
 
             secure_api.Add(auth);
 
             api.Add(secure_api);
 
             var app = Layout.Create().Add(Settings.APIBasePath, api);
-
-            //app.Add(auth);
 
             app.Add(CorsPolicy.Permissive());
 
@@ -185,8 +141,6 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
                        //.Development()
                        //.Console()
                        //.StartAsync();
-
-            //serverHost?.Add(auth);
 
             serverHost?.Defaults();
 
@@ -200,16 +154,16 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
             var server = serverHost?.StartAsync();
 
-            Mod.Log($"API Server Online and listening to requests at http://{host}:{port}" + $"/{Settings.APIBasePath}");
+            Mod.Log($"API Server Online and listening to requests at:\n http://{host}:{port}" + $"/{Settings.APIBasePath}");
             if (Settings.EnableSwaggerUI)
-                Mod.Log($"SwaggerUI API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/swagger/");
+                Mod.Log($"SwaggerUI API Browser available at:\n http://{host}:{port}" + $"/{Settings.APIBasePath}/swagger/");
             if (Settings.EnableRedoc)
-                Mod.Log($"Redoc API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/redoc/");
+                Mod.Log($"Redoc API Browser available at:\n\t http://{host}:{port}" + $"/{Settings.APIBasePath}/redoc/");
             if (Settings.EnableScalar)
-                Mod.Log($"Scalar API Browser available at http://{host}:{port}" + $"/{Settings.APIBasePath}/scalar/");
+                Mod.Log($"Scalar API Browser available at:\n http://{host}:{port}" + $"/{Settings.APIBasePath}/scalar/");
 
-            APIKeys.Load();
-            Mod.Log($"API Server has loaded and activated {APIKeys.Keys.Count} keys from storage");
+            AuthDB.Load();
+            Mod.Log($"API Server has loaded and activated {AuthDB.Keys.Count} keys from storage");
         }
         catch (Exception ex)
         {
@@ -223,40 +177,8 @@ public class PatchClass(BasicMod mod, string settingsName = "Settings.json") : B
 
         serverHost = null;
 
-        APIKeys.Keys.Clear();
+        AuthDB.Keys.Clear();
 
         Mod.Log("API Server Offline");
-    }
-
-    static ValueTask<IUser?> AuthenticateRequestAsync(IRequest request, string apiKey)
-    {
-        //Console.WriteLine($"request: {request.ToString()}  -- apikey: {apiKey}");
-
-        //if (apiKey == "abc")
-        //{
-        //    return new(new ApiKeyUser(apiKey, "ADMIN", "USER"));
-        //}
-
-        //if (apiKey == "bcd")
-        //{
-        //    return new(new ApiKeyUser(apiKey, "USER"));
-        //}
-
-        //return new(new ApiKeyUser(apiKey, "ADMIN"));
-
-        //return new(new ApiKeyUser(apiKey));
-
-        if (APIKeys.Keys.TryGetValue(apiKey, out var key))
-        {
-            //Console.WriteLine($"apikey: {apiKey} -- name: {key.Name} -- grants: {string.Join("; ", key.Grants)}");
-            //Console.WriteLine($"{key.Grants.Contains("ALL")}");
-
-            if (key.Grants.Contains("ALL"))
-                return new(new ApiKeyUser(apiKey, APIKeys.AvailableGrants.ToArray()));
-
-            return new(new ApiKeyUser(apiKey, key.Grants.ToArray()));
-        }
-
-        return default;
     }
 }

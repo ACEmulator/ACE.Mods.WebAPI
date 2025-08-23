@@ -2,18 +2,6 @@ namespace ACE.Mods.WebAPI
 {
     public class Commands
     {
-        //private const string BYE_COMMAND = "bye";
-
-        ////ACE-style command using attribute
-        //[CommandHandler(BYE_COMMAND, AccessLevel.Player, CommandHandlerFlag.None, -1, "Manage mods the lazy way")]
-        //public static void HandleListMods(Session session, params string[] parameters)
-        //{
-        //    //If Meta.json has RegisterCommands set to true, ACE will attempt to load/unload automatically
-        //    //Mod.Container.RegisterCommandHandlers(true);
-        //    Console.WriteLine("Bye.");
-        //    //session?.LogOffPlayer(true);
-        //}
-
         [CommandHandler("api", AccessLevel.Admin, CommandHandlerFlag.None, 0, "API management commands")]
         public static void HandleAPIcommand(Session session, params string[] parameters)
         {
@@ -42,11 +30,11 @@ namespace ACE.Mods.WebAPI
             else if (parameters[0] == "showkeys")
             {
                 var msg = "\n";
-                if (APIKeys.Keys.Count > 0)
+                if (AuthDB.Keys.Count > 0)
                 {
                     msg += "API Keys\n";
                     msg += "=========================================================\n";
-                    foreach (var apiKey in APIKeys.Keys.Values)
+                    foreach (var apiKey in AuthDB.Keys.Values)
                     {
                         msg += $"Name: {apiKey.Name}\n";
                         //msg += $"Key: {apiKey.Key}\n";
@@ -72,7 +60,7 @@ namespace ACE.Mods.WebAPI
                 {
                     var nameToFind = string.Join(" ", parameters[1..]);
 
-                    var apiKey = APIKeys.GetKeyByName(nameToFind);
+                    var apiKey = AuthDB.GetKeyByName(nameToFind);
 
                     if (apiKey == null)
                     {
@@ -93,12 +81,12 @@ namespace ACE.Mods.WebAPI
             else if (parameters[0] == "showgrants")
             {
                 var msg = "\n";
-                if (APIKeys.AvailableGrants.Count > 0)
+                if (AuthDB.AvailableGrants.Count > 0)
                 {
 
                     msg += "API Grants\n";
                     msg += "=========================================================\n";
-                    foreach (var grant in APIKeys.AvailableGrants)
+                    foreach (var grant in AuthDB.AvailableGrants)
                     {
                         msg += $"{grant}\n";
                     }
@@ -169,7 +157,7 @@ namespace ACE.Mods.WebAPI
 
                     foreach (var grant in grants)
                     {
-                        if (APIKeys.AvailableGrants.Contains(grant))
+                        if (AuthDB.AvailableGrants.Contains(grant))
                             validGrants = validGrants.AddItem(grant).ToArray();
                         else
                             invalidGrants = invalidGrants.AddItem(grant).ToArray();
@@ -178,7 +166,7 @@ namespace ACE.Mods.WebAPI
                     if (invalidGrants.Length > 0)
                         msg += $"The following grants are not valid and were ignored: {string.Join("; ", invalidGrants)}\n";
 
-                    var success = APIKeys.Add(name, validGrants, out var apiKey);
+                    var success = AuthDB.Add(name, validGrants, out var apiKey);
 
                     if (success)
                     {
@@ -275,7 +263,7 @@ namespace ACE.Mods.WebAPI
                         //msg = msg.TrimEnd();
                         //msg += $"\n";
 
-                        var foundKey = APIKeys.GetKeyByName(name);
+                        var foundKey = AuthDB.GetKeyByName(name);
 
                         if (foundKey != null)
                         {
@@ -286,7 +274,7 @@ namespace ACE.Mods.WebAPI
                             {
                                 foreach (var grant in grants)
                                 {
-                                    if (APIKeys.AvailableGrants.Contains(grant) && foundKey.Grants.Add(grant))
+                                    if (AuthDB.AvailableGrants.Contains(grant) && foundKey.Grants.Add(grant))
                                         validGrants = validGrants.AddItem(grant).ToArray();
                                     else
                                         invalidGrants = invalidGrants.AddItem(grant).ToArray();
@@ -312,7 +300,7 @@ namespace ACE.Mods.WebAPI
 
                             if (validGrants.Length > 0)
                             {
-                                var success = APIKeys.Modify(foundKey);
+                                var success = AuthDB.Modify(foundKey);
 
                                 if (success)
                                 {
@@ -354,7 +342,7 @@ namespace ACE.Mods.WebAPI
                 {
                     var name = string.Join(" ", parameters[1..]);
 
-                    var success = APIKeys.Remove(name);
+                    var success = AuthDB.Remove(name);
 
                     if (success)
                     {

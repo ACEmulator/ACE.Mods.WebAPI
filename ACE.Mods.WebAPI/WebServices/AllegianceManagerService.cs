@@ -2,7 +2,7 @@ namespace ACE.Mods.WebAPI.WebServices
 {
     public class AllegianceManagerService
     {
-        [RequireRole("allegiances")]
+        [RequireGrant("allegiances")]
         [ResourceMethod("")]
         public List<AllegianceDTO> GetAllegiances()
         {
